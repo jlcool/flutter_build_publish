@@ -5,14 +5,16 @@
     <vendor>jlcool</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>io.flutter</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.jlcool.flutterbuildpublish.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-    </extensions>
-
-    <applicationListeners>
-        <listener class="com.github.jlcool.flutterbuildpublish.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
+    <actions>
+        <!-- Add your actions here -->
+        <action id="MyToolbarButton"
+            class="com.github.jlcool.flutterbuildpublish.actions.MyToolbarButton"
+            text="打包"
+            description="This is my button"
+            icon="AllIcons.Actions.StepOut">
+            <add-to-group group-id="ToolbarRunGroup" anchor="after" relative-to-action="RunClass"/>
+        </action>
+    </actions>
 </idea-plugin>
