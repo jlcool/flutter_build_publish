@@ -14,6 +14,7 @@ public class MyDialog extends DialogWrapper {
     private ButtonGroup radioGroup;
     private JRadioButton radioButtonAPK;
     private JRadioButton radioButtonIOS;
+    private JRadioButton radioButtonWindows;
     private JCheckBox checkBoxUpload;
     private JTextField apiKeyField; // 新增的文本框
     public String apiKey;
@@ -37,8 +38,11 @@ public class MyDialog extends DialogWrapper {
         radioButtonAPK.setActionCommand("apk");
         radioButtonIOS = new JRadioButton("IOS");
         radioButtonIOS.setActionCommand("ios");
+        radioButtonWindows = new JRadioButton("windows");
+        radioButtonWindows.setActionCommand("windows");
         radioGroup.add(radioButtonAPK);
         radioGroup.add(radioButtonIOS);
+        radioGroup.add(radioButtonWindows);
         // 创建多选项
         checkBoxUpload = new JCheckBox("\u662f\u5426\u4e0a\u4f20");
         checkBoxUpload.addActionListener(new ActionListener() {
@@ -72,6 +76,17 @@ public class MyDialog extends DialogWrapper {
             }
         });
         radioButtonPanel.add(radioButtonIOS);
+        radioButtonPanel.add(Box.createHorizontalStrut(10)); // 添加间距
+        radioButtonPanel.add(Box.createRigidArea(new Dimension(5, 0))); // 添加间距
+
+        radioButtonWindows.setSelected(PropertiesComponent.getInstance().getBoolean("radio_ios", false));
+        radioButtonWindows.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PropertiesComponent.getInstance().setValue("radio_ios", radioButtonWindows.isSelected());
+            }
+        });
+        radioButtonPanel.add(radioButtonWindows);
         radioButtonPanel.add(Box.createHorizontalGlue());
 
         JPanel checkboxButtonPanel = new JPanel();

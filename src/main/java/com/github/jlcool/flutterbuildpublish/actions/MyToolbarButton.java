@@ -137,11 +137,12 @@ public class MyToolbarButton extends AnAction {
                                 public void processTerminated(@NotNull ProcessEvent event) {
                                     int exitCode = event.getExitCode();
                                     if (exitCode == 0) {
+                                        FlutterConsoles.displayMessage(project, module, "编译完成\n");
                                         File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app-"+flavor+"-release.apk");
-                                        if (apkFile.exists()) {
+                                        if (apkFile.exists() && dialog.isCheckBoxSelected()) {
                                             uploadApk(apkFile, project,module,dialog);
                                         } else {
-                                            System.err.println("APK file not found.");
+                                            FlutterConsoles.displayMessage(project, module, "上传文件未找到\n");
                                         }
                                     } else {
                                         System.err.println("Flutter build failed with exit code: " + exitCode);
@@ -188,10 +189,7 @@ public class MyToolbarButton extends AnAction {
                         isTargetVersion = true;
                         continue;
                     }
-                    if (isTargetVersion) {
-                        if (line.matches("\\d+\\.\\d+\\.\\d+")) { // 如果是版本号，结束读取
-                            break;
-                        }
+                    if (isTargetVersion && !line.matches("\\d+\\.\\d+\\.\\d+")) { // 如果已找到目标版本且当前行不是版本号
                         changelogContent.append(line).append("\n");
                     }
                 }
@@ -243,8 +241,8 @@ public class MyToolbarButton extends AnAction {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("version: ")) {
-                    String[] parts = line.split(":")[1].trim().split("\\+");
-                    return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+                    String[] parts = line.split(":")[1].split("\\+");
+                    return parts[0].trim();
                 }
             }
         } catch (IOException e) {
