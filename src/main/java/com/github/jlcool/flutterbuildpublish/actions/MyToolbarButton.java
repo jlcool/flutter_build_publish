@@ -107,7 +107,7 @@ public class MyToolbarButton extends AnAction {
                     commandLine.addParameter("--release");
 
                     // 检查flavor是否不为空或特定条件满足
-                    if (flavor != null && !flavor.isEmpty()) {
+                    if (flavor != null && !flavor.isEmpty() && !dialog.isWindowsSelected()) {
                         // 添加flavor参数到命令列表
                         commandLine.addParameter("--flavor");
                         commandLine.addParameter(flavor);

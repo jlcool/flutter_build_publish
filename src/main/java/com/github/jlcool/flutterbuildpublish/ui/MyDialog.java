@@ -140,4 +140,7 @@ public class MyDialog extends DialogWrapper {
     public boolean isCheckBoxSelected() {
         return checkBoxUpload.isSelected();
     }
+    public boolean isWindowsSelected() {
+        return radioButtonWindows.isSelected();
+    }
 }
