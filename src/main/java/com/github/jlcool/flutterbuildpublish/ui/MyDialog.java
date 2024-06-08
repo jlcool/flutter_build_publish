@@ -29,7 +29,7 @@ public class MyDialog extends DialogWrapper {
     protected JComponent createCenterPanel() {
         contentPane = new JPanel();
         contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
-        pack();
+
         JPanel apiKeyPanel = new JPanel();
         radioGroup = new ButtonGroup();
         apkLabel = new JLabel("\u6253\u5305\u7c7b\u578b");
@@ -45,6 +45,8 @@ public class MyDialog extends DialogWrapper {
         radioGroup.add(radioButtonWindows);
         // 创建多选项
         checkBoxUpload = new JCheckBox("\u662f\u5426\u4e0a\u4f20");
+        // 设置文本对齐方式为左边
+        checkBoxUpload.setHorizontalTextPosition(SwingConstants.LEFT);
         checkBoxUpload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -104,7 +106,7 @@ public class MyDialog extends DialogWrapper {
 
 
         apiKeyPanel.setLayout(new BoxLayout(apiKeyPanel, BoxLayout.X_AXIS));
-        checkboxButtonPanel.add(Box.createHorizontalStrut(10));
+        apiKeyPanel.add(Box.createHorizontalStrut(10));
         apiKeyPanel.add(new JLabel("Apikey:"));
         String lastApiKey = PropertiesComponent.getInstance().getValue("_api_key", "");
         apiKeyField= new JTextField();
@@ -117,7 +119,7 @@ public class MyDialog extends DialogWrapper {
         contentPane.add(checkboxButtonPanel);
         contentPane.add(apiKeyPanel);
         apiKeyPanel.setVisible(checkBoxUpload.isSelected());
-        contentPane.setPreferredSize(new Dimension(400, 100));
+        pack();
         return contentPane;
     }
     // 获取选中的单选项

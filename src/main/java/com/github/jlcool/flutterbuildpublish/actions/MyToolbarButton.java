@@ -46,6 +46,7 @@ import io.flutter.FlutterMessages;
 import io.flutter.actions.FlutterBuildActionGroup;
 import io.flutter.console.FlutterConsoles;
 import io.flutter.pub.PubRoot;
+import io.flutter.run.LaunchState;
 import io.flutter.run.SdkFields;
 import io.flutter.run.SdkRunConfig;
 import io.flutter.sdk.FlutterSdk;
@@ -161,10 +162,20 @@ public class MyToolbarButton extends AnAction {
     }
 
     @Override
-    public void update(@NotNull final AnActionEvent event) {
-        boolean visibility = event.getProject() != null;
-        event.getPresentation().setEnabled(visibility);
-        event.getPresentation().setVisible(visibility);
+    public void update(@NotNull final AnActionEvent e) {
+        var project=e.getProject();
+        if (project ==null)
+        {
+            return;
+        }
+        RunManager runManager = RunManager.getInstance(project);
+        RunnerAndConfigurationSettings configurationSettings = runManager.getSelectedConfiguration();
+        if (configurationSettings == null) {
+            return;
+        }
+        RunConfiguration configuration = configurationSettings.getConfiguration();
+        var enable= configuration instanceof SdkRunConfig && LaunchState.getRunningAppProcess((SdkRunConfig)configuration) == null;
+        e.getPresentation().setEnabled(enable);
     }
 
     private void uploadApk(File apkFile, Project project,com.intellij.openapi.module.Module module,MyDialog dialog) {
