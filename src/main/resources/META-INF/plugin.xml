@@ -3,8 +3,7 @@
     <id>com.github.jlcool.flutterbuildpublish</id>
     <name>flutter_build_publish</name>
     <vendor>jlcool</vendor>
-
-    <depends>org.jetbrains.android</depends>
+    <depends>com.intellij.modules.platform</depends>
     <depends>io.flutter</depends>
     <actions>
         <!-- Add your actions here -->

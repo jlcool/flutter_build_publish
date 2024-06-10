@@ -3,12 +3,19 @@
 # flutter_build_publish Changelog
 
 ## [Unreleased]
+
+## [0.0.5]
+
+### Changed
+
+- 添加com.intellij.modules.platform，支持平台
 ## [0.0.4]
 
 ### Changed
 
 - 支持Android Studio
 - 支持新版工具栏按钮
+
 ## [0.0.3]
 
 ### Changed
@@ -21,6 +28,7 @@
 
 - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
 
-[Unreleased]: https://github.com/jlcool/flutter_build_publish/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/jlcool/flutter_build_publish/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/jlcool/flutter_build_publish/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jlcool/flutter_build_publish/compare/v0.0.1...v0.0.3
 [0.0.1]: https://github.com/jlcool/flutter_build_publish/commits/v0.0.1
