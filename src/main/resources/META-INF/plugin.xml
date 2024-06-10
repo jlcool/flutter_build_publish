@@ -12,8 +12,8 @@
             text="打包"
             description="This is my button"
             icon="AllIcons.Actions.StepOut">
-            <add-to-group group-id="MainToolbarRight" anchor="after" relative-to-action="RunClass"/>
-            <add-to-group group-id="ToolbarRunGroup" anchor="after" relative-to-action="RunClass"/>
+            <add-to-group group-id="MainToolbarRight" anchor="before" relative-to-action="RunClass"/>
+            <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunClass"/>
         </action>
     </actions>
 </idea-plugin>

@@ -79,17 +79,24 @@ public class MyToolbarButton extends AnAction {
         ProcessAdapter processAdapter = new ProcessAdapter() {
             @Override
             public void processTerminated(@NotNull ProcessEvent event) {
-                progressHelper.done();
+
                 final int exitCode = event.getExitCode();
                 if (exitCode != 0) {
+                    progressHelper.done();
                     FlutterMessages.showError("Error while building " + additionalArgs, "`flutter build` returned: " + exitCode, project);
                 }else{
+                    progressHelper.start("上传中");
                     FlutterConsoles.displayMessage(project, module, "编译完成\n");
-                    File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app"+(flavor != null && !flavor.isEmpty() ?"-":"")+flavor+"-release.apk");
-                    if (apkFile.exists() && dialog.isCheckBoxSelected()) {
-                        uploadApk(apkFile, project,module,dialog);
-                    } else {
-                        FlutterConsoles.displayMessage(project, module, "上传文件未找到\n");
+                    if(dialog.isCheckBoxSelected()) {
+                        File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app" + (flavor != null && !flavor.isEmpty() ? "-" : "") + flavor + "-release.apk");
+                        if (apkFile.exists()) {
+                            uploadApk(apkFile, project, module, dialog);
+                            progressHelper.done();
+                        } else {
+                            FlutterConsoles.displayMessage(project, module, "上传文件未找到\n");
+                        }
+                    }else{
+                        progressHelper.done();
                     }
                 }
             }
@@ -209,6 +216,7 @@ public class MyToolbarButton extends AnAction {
         RunConfiguration configuration = configurationSettings.getConfiguration();
         var enable= configuration instanceof SdkRunConfig && LaunchState.getRunningAppProcess((SdkRunConfig)configuration) == null;
         e.getPresentation().setEnabled(enable);
+        e.getPresentation().setVisible(enable);
     }
 
     private static void uploadApk(File apkFile, Project project, com.intellij.openapi.module.Module module, MyDialog dialog) {
