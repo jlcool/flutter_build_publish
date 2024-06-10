@@ -1,6 +1,7 @@
 package com.github.jlcool.flutterbuildpublish.actions;
 
 import static com.intellij.openapi.vcs.history.FileHistoryRefresher.findOrCreate;
+import static io.flutter.actions.FlutterBuildActionGroup.build;
 import static io.flutter.actions.RunFlutterAction.getRunConfigSettings;
 
 import com.github.jlcool.flutterbuildpublish.ProgressRequestBody;
@@ -39,11 +40,11 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import io.flutter.FlutterMessages;
-import io.flutter.actions.FlutterBuildActionGroup;
 import io.flutter.console.FlutterConsoles;
 import io.flutter.pub.PubRoot;
 import io.flutter.run.LaunchState;
@@ -62,10 +63,62 @@ import java.util.jar.JarFile;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import io.flutter.pub.PubRoots;
 
 public class MyToolbarButton extends AnAction {
 
+    public static void build(@NotNull Project project,
+                             @NotNull PubRoot pubRoot,
+                             @NotNull FlutterSdk sdk,
+                             @NotNull MyDialog dialog,
+                             String flavor,
+                             @NotNull String... additionalArgs) {
+        final ProgressHelper progressHelper = new ProgressHelper(project);
+        progressHelper.start("打包中");
+        final com.intellij.openapi.module.Module module = pubRoot.getModule(project);
+        ProcessAdapter processAdapter = new ProcessAdapter() {
+            @Override
+            public void processTerminated(@NotNull ProcessEvent event) {
+                progressHelper.done();
+                final int exitCode = event.getExitCode();
+                if (exitCode != 0) {
+                    FlutterMessages.showError("Error while building " + additionalArgs, "`flutter build` returned: " + exitCode, project);
+                }else{
+                    FlutterConsoles.displayMessage(project, module, "编译完成\n");
+                    File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app"+(flavor != null && !flavor.isEmpty() ?"-":"")+flavor+"-release.apk");
+                    if (apkFile.exists() && dialog.isCheckBoxSelected()) {
+                        uploadApk(apkFile, project,module,dialog);
+                    } else {
+                        FlutterConsoles.displayMessage(project, module, "上传文件未找到\n");
+                    }
+                }
+            }
+        };
 
+        if (module != null) {
+            MessageView messageView = MessageView.getInstance(project);
+            //如果编译窗口关闭则停止编译
+            messageView.getContentManager().addContentManagerListener(new ContentManagerAdapter() {
+                @Override
+                public void contentRemoved(ContentManagerEvent event) {
+                    progressHelper.cancel();
+                }
+            });
+
+            //noinspection ConstantConditions
+            sdk.flutterBuild(pubRoot, additionalArgs).startInModuleConsole(module, pubRoot::refresh, processAdapter);
+        }
+        else {
+            //noinspection ConstantConditions
+            final ColoredProcessHandler processHandler = sdk.flutterBuild(pubRoot, additionalArgs).startInConsole(project);
+            if (processHandler == null) {
+                progressHelper.done();
+            }
+            else {
+                processHandler.addProcessListener(processAdapter);
+            }
+        }
+    }
     @Override
     public @NotNull ActionUpdateThread getActionUpdateThread() {
         return ActionUpdateThread.BGT;
@@ -80,6 +133,11 @@ public class MyToolbarButton extends AnAction {
             if (project == null) {
                 return;
             }
+            final FlutterSdk sdk = FlutterSdk.getFlutterSdk(project);
+            if (sdk == null) {
+                return;
+            }
+
             RunManager runManager = RunManager.getInstance(project);
             RunnerAndConfigurationSettings configurationSettings = runManager.getSelectedConfiguration();
             if (configurationSettings == null) {
@@ -97,60 +155,35 @@ public class MyToolbarButton extends AnAction {
 
 
                 try {
-                    GeneralCommandLine commandLine = new GeneralCommandLine();
-                    commandLine.setExePath("D:\\fvm\\default\\bin\\flutter.bat");
-                    commandLine.addParameter("build");
-                    commandLine.addParameter(dialog.getSelectedRadio());
+
+                    final List<String> args = new ArrayList<>();
+
+                    args.add(dialog.getSelectedRadio());
 
                     if (filePath != null && !filePath.isEmpty()) {
-                        commandLine.addParameter(filePath);
+                        args.add(filePath);
                     }
-                    commandLine.addParameter("--release");
+                    args.add("--release");
 
                     // 检查flavor是否不为空或特定条件满足
                     if (flavor != null && !flavor.isEmpty() && !dialog.isWindowsSelected()) {
                         // 添加flavor参数到命令列表
-                        commandLine.addParameter("--flavor");
-                        commandLine.addParameter(flavor);
+                        args.add("--flavor");
+                        args.add(flavor);
                     }
                     if (additionalArgs != null && !additionalArgs.isEmpty()) {
-                        commandLine.addParameter(additionalArgs);
+                        args.add(additionalArgs);
                     }
-                    commandLine.setWorkDirectory(project.getBasePath());
 
-                    ColoredProcessHandler handler = new ColoredProcessHandler(commandLine);
                     final PubRoot pubRoot = PubRoot.forEventWithRefresh(event);
                     if (pubRoot != null) {
-                        com.intellij.openapi.module.Module module = pubRoot.getModule(project);
-                        if (module != null) {
-                            FlutterConsoles.displayProcessLater(handler, module.getProject(), module, handler::startNotify);
-                            MessageView messageView = MessageView.getInstance(event.getProject());
-                            //如果编译窗口关闭则停止编译
-                            messageView.getContentManager().addContentManagerListener(new ContentManagerAdapter() {
-                                @Override
-                                public void contentRemoved(ContentManagerEvent event) {
-                                    handler.destroyProcess(); // 停止正在执行的命令
-                                }
-                            });
+                        build(project, pubRoot, sdk,dialog,flavor, args.toArray(new String[0]));
 
-                            handler.addProcessListener(new ProcessAdapter() {
-                                @Override
-                                public void processTerminated(@NotNull ProcessEvent event) {
-                                    int exitCode = event.getExitCode();
-                                    if (exitCode == 0) {
-                                        FlutterConsoles.displayMessage(project, module, "编译完成\n");
-                                        File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app-"+flavor+"-release.apk");
-                                        if (apkFile.exists() && dialog.isCheckBoxSelected()) {
-                                            uploadApk(apkFile, project,module,dialog);
-                                        } else {
-                                            FlutterConsoles.displayMessage(project, module, "上传文件未找到\n");
-                                        }
-                                    } else {
-                                        System.err.println("Flutter build failed with exit code: " + exitCode);
-                                    }
-                                }
-                            });
 
+                    }else{
+                        List<PubRoot> roots = PubRoots.forProject(project);
+                        for (PubRoot sub : roots) {
+                            build(project, sub, sdk,dialog,flavor, args.toArray(new String[0]));
                         }
                     }
                 } catch (Exception ex) {
@@ -178,7 +211,7 @@ public class MyToolbarButton extends AnAction {
         e.getPresentation().setEnabled(enable);
     }
 
-    private void uploadApk(File apkFile, Project project,com.intellij.openapi.module.Module module,MyDialog dialog) {
+    private static void uploadApk(File apkFile, Project project, com.intellij.openapi.module.Module module, MyDialog dialog) {
         OkHttpClient client = new OkHttpClient();
         ProgressRequestBody requestBody = new ProgressRequestBody(apkFile, new ProgressRequestBody.UploadCallback() {
             @Override
@@ -241,7 +274,7 @@ public class MyToolbarButton extends AnAction {
             }
         });
     }
-    private String getVersionNameFromPubspecYaml(Project project,com.intellij.openapi.module.Module module) {
+    private static String getVersionNameFromPubspecYaml(Project project, com.intellij.openapi.module.Module module) {
         File pubspecFile = new File(project.getBasePath(), "pubspec.yaml");
         if (!pubspecFile.exists()) {
             FlutterConsoles.displayMessage(project, module, "pubspec.yaml 文件不存在.\n");
