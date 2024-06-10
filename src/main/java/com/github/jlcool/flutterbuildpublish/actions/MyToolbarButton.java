@@ -6,6 +6,7 @@ import static io.flutter.actions.RunFlutterAction.getRunConfigSettings;
 
 import com.github.jlcool.flutterbuildpublish.ProgressRequestBody;
 import com.github.jlcool.flutterbuildpublish.ui.MyDialog;
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.RunConfiguration;
@@ -64,14 +65,20 @@ import java.util.jar.JarFile;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import io.flutter.pub.PubRoots;
+import java.nio.file.Paths;
 
 public class MyToolbarButton extends AnAction {
-
+    static  String basePat="";
+static final String podsPath= Paths.get("Pods", "Target Support Files", "Pods-Runner").toString();
+static final String workspacePath=Paths.get("ios",  "Runner.xcworkspace").toString();
+    static final String archivePath=Paths.get("build",  "ios","iphoneos","Runner.xcarchive").toString();
+    static final String ipaExportPath=Paths.get("build",  "ios","iphoneos","Runner").toString();
     public static void build(@NotNull Project project,
                              @NotNull PubRoot pubRoot,
                              @NotNull FlutterSdk sdk,
                              @NotNull MyDialog dialog,
                              String flavor,
+                             String buildType,
                              @NotNull String... additionalArgs) {
         final ProgressHelper progressHelper = new ProgressHelper(project);
         progressHelper.start("打包中");
@@ -88,7 +95,12 @@ public class MyToolbarButton extends AnAction {
                     progressHelper.start("上传中");
                     FlutterConsoles.displayMessage(project, module, "编译完成\n");
                     if(dialog.isCheckBoxSelected()) {
-                        File apkFile = new File(project.getBasePath() + "/build/app/outputs/flutter-apk/app" + (flavor != null && !flavor.isEmpty() ? "-" : "") + flavor + "-release.apk");
+
+                        String pathname=project.getBasePath() + "/build/app/outputs/flutter-apk/app" + (flavor != null && !flavor.isEmpty() ? "-" : "") + flavor + "-release.apk";
+                        if(Objects.equals(buildType, "ios")){
+                            pathname=project.getBasePath() + "/build/app/outputs/flutter-apk/app" + (flavor != null && !flavor.isEmpty() ? "-" : "") + flavor + "-release.apk";
+                        }
+                        File apkFile = new File(pathname);
                         if (apkFile.exists()) {
                             uploadApk(apkFile, project, module, dialog);
                             progressHelper.done();
@@ -126,6 +138,89 @@ public class MyToolbarButton extends AnAction {
             }
         }
     }
+
+
+    public void podUpdate( ){
+        GeneralCommandLine commandLine = new GeneralCommandLine();
+        commandLine.setExePath("pod");
+        commandLine.addParameter("update");
+        ColoredProcessHandler handler = null;
+        try {
+            handler = new ColoredProcessHandler(commandLine);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        handler.startNotify();
+    }
+    public void podInstall( ){
+        GeneralCommandLine commandLine = new GeneralCommandLine();
+        commandLine.setExePath("pod");
+        commandLine.addParameter("install");
+        commandLine.addParameter("--verbose");
+        ColoredProcessHandler handler = null;
+        try {
+            handler = new ColoredProcessHandler(commandLine);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        handler.startNotify();
+    }
+    public void clean( ){
+        GeneralCommandLine commandLine = new GeneralCommandLine();
+        commandLine.setExePath("xcodebuild");
+        commandLine.addParameter("clean");
+        commandLine.addParameter("-workspace");
+        commandLine.addParameter(workspacePath);
+        commandLine.addParameter("-scheme");
+        commandLine.addParameter("Runner");
+        commandLine.addParameter("-configuration");
+        commandLine.addParameter("release");
+        ColoredProcessHandler handler = null;
+        try {
+            handler = new ColoredProcessHandler(commandLine);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        handler.startNotify();
+    }
+    public void xcodebuildArchive( ){
+        GeneralCommandLine commandLine = new GeneralCommandLine();
+        commandLine.setExePath("xcodebuild");
+        commandLine.addParameter("archive");
+        commandLine.addParameter("-workspace");
+        commandLine.addParameter(workspacePath);
+        commandLine.addParameter("-scheme");
+        commandLine.addParameter("Runner");
+        commandLine.addParameter("-configuration");
+        commandLine.addParameter("release");
+        commandLine.addParameter("-archivePath");
+        commandLine.addParameter(archivePath);
+        ColoredProcessHandler handler = null;
+        try {
+            handler = new ColoredProcessHandler(commandLine);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        handler.startNotify();
+    }
+    public void xcodebuildExportArchive( ){
+        GeneralCommandLine commandLine = new GeneralCommandLine();
+        commandLine.setExePath("xcodebuild");
+        commandLine.addParameter("-exportArchive");
+        commandLine.addParameter("-archivePath");
+        commandLine.addParameter(archivePath);
+        commandLine.addParameter("-exportPath");
+        commandLine.addParameter(ipaExportPath);
+        commandLine.addParameter("-exportOptionsPlist");
+        commandLine.addParameter("release.plist");
+        ColoredProcessHandler handler = null;
+        try {
+            handler = new ColoredProcessHandler(commandLine);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        handler.startNotify();
+    }
     @Override
     public @NotNull ActionUpdateThread getActionUpdateThread() {
         return ActionUpdateThread.BGT;
@@ -140,6 +235,7 @@ public class MyToolbarButton extends AnAction {
             if (project == null) {
                 return;
             }
+            basePat=project.getBasePath();
             final FlutterSdk sdk = FlutterSdk.getFlutterSdk(project);
             if (sdk == null) {
                 return;
@@ -151,22 +247,14 @@ public class MyToolbarButton extends AnAction {
                 return;
             }
             RunConfiguration configuration = configurationSettings.getConfiguration();
-            if (configuration instanceof SdkRunConfig) {
-                SdkRunConfig sdkRunConfig = (SdkRunConfig) configuration;
+            if (configuration instanceof SdkRunConfig sdkRunConfig) {
                 SdkFields someField = sdkRunConfig.getFields();
                 String filePath = someField.getFilePath();
                 String flavor = someField.getBuildFlavor();
                 String additionalArgs = someField.getAdditionalArgs();
-                String attachArgs = someField.getAttachArgs();
-                Map<String, String> envs = someField.getEnvs();
-
-
                 try {
-
                     final List<String> args = new ArrayList<>();
-
                     args.add(dialog.getSelectedRadio());
-
                     if (filePath != null && !filePath.isEmpty()) {
                         args.add(filePath);
                     }
@@ -184,13 +272,12 @@ public class MyToolbarButton extends AnAction {
 
                     final PubRoot pubRoot = PubRoot.forEventWithRefresh(event);
                     if (pubRoot != null) {
-                        build(project, pubRoot, sdk,dialog,flavor, args.toArray(new String[0]));
-
+                        build(project, pubRoot, sdk,dialog,flavor,dialog.getSelectedRadio(), args.toArray(new String[0]));
 
                     }else{
                         List<PubRoot> roots = PubRoots.forProject(project);
                         for (PubRoot sub : roots) {
-                            build(project, sub, sdk,dialog,flavor, args.toArray(new String[0]));
+                            build(project, sub, sdk,dialog,flavor,dialog.getSelectedRadio(), args.toArray(new String[0]));
                         }
                     }
                 } catch (Exception ex) {
