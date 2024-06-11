@@ -10,7 +10,7 @@
         <action id="MyToolbarButton"
             class="com.github.jlcool.flutterbuildpublish.actions.MyToolbarButton"
             text="打包"
-            description="This is my button"
+            description="用于打包及发布到蒲公英"
             icon="AllIcons.Actions.StepOut">
             <add-to-group group-id="MainToolbarRight" anchor="before" relative-to-action="RunClass"/>
             <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunClass"/>

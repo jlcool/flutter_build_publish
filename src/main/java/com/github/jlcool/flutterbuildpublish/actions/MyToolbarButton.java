@@ -37,10 +37,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -321,14 +323,18 @@ static final String workspacePath=Paths.get("ios",  "Runner.xcworkspace").toStri
         String targetVersion = getVersionNameFromPubspecYaml(project,module); // 需要读取的版本号
         boolean isTargetVersion = false;
         if (changelogFile.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(changelogFile))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(changelogFile), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.trim().equals(targetVersion)) {
                         isTargetVersion = true;
                         continue;
                     }
-                    if (isTargetVersion && !line.matches("\\d+\\.\\d+\\.\\d+")) { // 如果已找到目标版本且当前行不是版本号
+                    if (isTargetVersion) { // 如果已找到目标版本且当前行不是版本号
+                        if(line.matches("\\d+\\.\\d+\\.\\d+")){
+                            break;
+                        }
                         changelogContent.append(line).append("\n");
                     }
                 }
