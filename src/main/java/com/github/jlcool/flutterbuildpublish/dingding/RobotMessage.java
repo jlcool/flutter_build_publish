@@ -5,6 +5,7 @@ import com.github.jlcool.flutterbuildpublish.ui.MyDialog;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ public class RobotMessage {
         conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 
         MarkdownMessage message = new MarkdownMessage(title,text);
-        message.setAt(isAtAll,splitDingAt(dialog.getDingAt()));
+        message.setAt(isAtAll,new ArrayList<>());
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonBody = mapper.writeValueAsString(message);

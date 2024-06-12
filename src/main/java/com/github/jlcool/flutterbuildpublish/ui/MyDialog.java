@@ -211,7 +211,7 @@ public class MyDialog extends DialogWrapper {
         apiKey= apiKeyField.getText();
         PropertiesComponent.getInstance().setValue("_api_key",apiKey);
         PropertiesComponent.getInstance().setValue("_ding_token", dingdingTokenField.getText());
-        PropertiesComponent.getInstance().setValue("_at_who", atWhoField.getText());
+        //PropertiesComponent.getInstance().setValue("_at_who", atWhoField.getText());
         if (selected == null) {
             JOptionPane.showMessageDialog(null, "\u9009\u62e9\u4e00\u4e2a\u9700\u8981\u6253\u5305\u7684\u7c7b\u578b", "\u9519\u8bef", JOptionPane.ERROR_MESSAGE);
             return;

@@ -397,7 +397,7 @@ static final String workspacePath=Paths.get("ios",  "Runner.xcworkspace").toStri
                         String buildQRCodeURL=jsonNode.get("data").get("buildQRCodeURL").asText();
                         String buildIcon=jsonNode.get("data").get("buildIcon").asText();
                         try {
-                            RobotMessage.sendMessage(dialog, Objects.equals(dialog.getDingAt(), "all"),"应用更新","**应用更新提醒**\n\n应用名称："+buildName+"\n\n" +
+                            RobotMessage.sendMessage(dialog, false,"应用更新","**应用更新提醒**\n\n应用名称："+buildName+"\n\n" +
                                     "应用类型："+buildType+"\n\n" +
                                     "版本信息："+buildVersion+"(Build "+buildBuildVersion+")\n\n" +
                                     "应用大小："+String.format("%.2f",buildFileSize/1024./1024.0)+" MB\n\n" +
