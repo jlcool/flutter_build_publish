@@ -402,7 +402,7 @@ static final String workspacePath=Paths.get("ios",  "Runner.xcworkspace").toStri
                                     "版本信息："+buildVersion+"(Build "+buildBuildVersion+")\n\n" +
                                     "应用大小："+String.format("%.2f",buildFileSize/1024./1024.0)+" MB\n\n" +
                                     "更新时间："+buildUpdated+"\n\n" +
-                                    "更新内容："+buildUpdateDescription+"\n\n"+
+                                    "更新内容："+buildUpdateDescription.replaceAll("\n","\n\n")+"\n\n"+
                                     "![screenshot]("+buildQRCodeURL+") "+"\n\n"+
                                     "## [点击下载](https://www.pgyer.com/"+buildShortcutUrl+")");
                             FlutterConsoles.displayMessage(project, module, "\u4e0a\u4f20\u6210\u529f.\n");
